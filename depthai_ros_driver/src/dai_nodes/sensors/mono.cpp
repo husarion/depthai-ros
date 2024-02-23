@@ -99,7 +99,7 @@ void Mono::setupQueues(std::shared_ptr<dai::Device> device) {
                                          ph->getParam<bool>("i_enable_lazy_publisher")));
 
         } else {
-            monoPubIT = image_transport::create_camera_publisher(getROSNode(), "~/" + getName() + "/image_raw");
+            monoPubIT = image_transport::create_camera_publisher(getROSNode(), "~/" + getName() + "/image_raw", rmw_qos_profile_sensor_data);
             monoQ->addCallback(std::bind(sensor_helpers::cameraPub,
                                          std::placeholders::_1,
                                          std::placeholders::_2,

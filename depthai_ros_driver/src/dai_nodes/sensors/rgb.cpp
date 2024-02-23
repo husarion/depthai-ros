@@ -68,6 +68,7 @@ void RGB::setXinXout(std::shared_ptr<dai::Pipeline> pipeline) {
 }
 
 void RGB::setupQueues(std::shared_ptr<dai::Device> device) {
+
     if(ph->getParam<bool>("i_publish_topic")) {
         auto tfPrefix = getTFPrefix(utils::getSocketName(static_cast<dai::CameraBoardSocket>(ph->getParam<int>("i_board_socket_id"))));
         infoManager = std::make_shared<camera_info_manager::CameraInfoManager>(
@@ -111,7 +112,7 @@ void RGB::setupQueues(std::shared_ptr<dai::Device> device) {
                                           ph->getParam<bool>("i_enable_lazy_publisher")));
 
         } else {
-            rgbPubIT = image_transport::create_camera_publisher(getROSNode(), "~/" + getName() + "/image_raw");
+            rgbPubIT = image_transport::create_camera_publisher(getROSNode(), "~/" + getName() + "/image_raw", rmw_qos_profile_sensor_data);
             colorQ->addCallback(std::bind(sensor_helpers::cameraPub,
                                           std::placeholders::_1,
                                           std::placeholders::_2,
@@ -140,12 +141,12 @@ void RGB::setupQueues(std::shared_ptr<dai::Device> device) {
             previewInfoManager->loadCameraInfo(ph->getParam<std::string>("i_calibration_file"));
         }
         if(ipcEnabled()) {
-            previewPubIT = image_transport::create_camera_publisher(getROSNode(), "~/" + getName() + "/preview/image_raw");
+            previewPubIT = image_transport::create_camera_publisher(getROSNode(), "~/" + getName() + "/preview/image_raw", options, rmw_qos_profile_sensor_data);
             previewQ->addCallback(
                 std::bind(sensor_helpers::basicCameraPub, std::placeholders::_1, std::placeholders::_2, *imageConverter, previewPubIT, previewInfoManager));
         } else {
             previewPub = getROSNode()->create_publisher<sensor_msgs::msg::Image>("~/" + getName() + "/preview/image_raw", 10);
-            previewInfoPub = getROSNode()->create_publisher<sensor_msgs::msg::CameraInfo>("~/" + getName() + "/preview/camera_info", 10);
+            previewInfoPub = getROSNode()->create_publisher<sensor_msgs::msg::CameraInfo>("~/" + getName() + "/preview/camera_info", 10, options);
             previewQ->addCallback(std::bind(sensor_helpers::splitPub,
                                             std::placeholders::_1,
                                             std::placeholders::_2,
